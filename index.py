@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     for i in range(10000):
         client.stepSimulation()
-        # human.apply_motor_power()
+        human.apply_motor_power()
         time.sleep(1. / 240.)
 
     cubePos, cubeOrn = client.getBasePositionAndOrientation(human.body)
