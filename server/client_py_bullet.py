@@ -20,6 +20,7 @@ class ClientPyBullet(object):
             else:
                 self._connection_mode = p.DIRECT
         self._client = p.connect(self._connection_mode)
+        p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 
     def __del__(self):
         """Clean up connection if not already done."""

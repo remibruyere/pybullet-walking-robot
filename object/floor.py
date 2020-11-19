@@ -15,3 +15,6 @@ class Floor(object):
     def load_urdf(self):
         """Load URDF model from plane urdf file to create the body"""
         self.body = self.client.loadURDF("plane.urdf")
+
+    def get_position(self):
+        return self.client.getBasePositionAndOrientation(self.body)[0]
