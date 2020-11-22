@@ -7,6 +7,15 @@ from object.human_body import HumanBody
 from object.soccerball import Soccerball
 from utils.Coordinate import Coordinate
 
+REWARD_STAYING_ALIVE = 1
+
+REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 5
+REWARD_HUMAN_STAYING_UP_POSITIVE = 2
+
+REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -3
+REWARD_HUMAN_STAYING_UP_NEGATIVE = -40
+REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -50
+
 
 class Environment(object):
     def __init__(self):
@@ -17,6 +26,7 @@ class Environment(object):
         self.floor: Floor = self.add_floor()
         self.soccerball: Soccerball = self.add_soccerball()
         self.human: HumanBody = self.add_human()
+        self.memory = {"distance_human_goal": self.get_distance_human_goal()}
 
     def add_floor(self):
         return Floor(self.client)
@@ -41,11 +51,21 @@ class Environment(object):
         self.floor = self.add_floor()
         self.soccerball = self.add_soccerball()
         self.human = self.add_human()
+        self.memory = {"distance_human_goal": self.get_distance_human_goal()}
+
+    def update_memory(self):
+        self.memory = {"distance_human_goal": self.get_distance_human_goal()}
 
     def get_height_human_from_floor(self):
         (human_root_position, human_root_orientation) = self.human.get_position_orientation()
         floor_root_position = self.floor.get_position()
         return human_root_position[2] - floor_root_position[2]
+
+    def get_distance_human_goal(self):
+        (human_root_position, _) = self.human.get_position_orientation()
+        human_coord = Coordinate(human_root_position[0], human_root_position[1], human_root_position[2])
+        distance_from_goal = human_coord.abs_distance_from(self.goal_coord)
+        return distance_from_goal
 
     def get_state(self):
         height_floor_human = round(self.human.get_position_orientation()[0][2], 4)
@@ -61,21 +81,37 @@ class Environment(object):
         return result
 
     def get_reward(self):
-        # hauteur corps par rapport au sol
-        # < 1.410 = plus bas que le maximum debout
-        # TODO: implement reward
-        pass
+        # reward to stay alive
+        reward = 1
+        # body distance from goal
+        new_distance_human_goal = self.get_distance_human_goal()
+        if new_distance_human_goal < self.memory["distance_human_goal"]:
+            reward += REWARD_HUMAN_CLOSER_GOAL_POSITIVE
+        else:
+            reward += REWARD_HUMAN_CLOSER_GOAL_NEGATIVE
+        # body height from the ground
+        # (<0.94 = lower than 2/3 of the maximum standing value (1.410))
+        height_human_floor = self.get_height_human_from_floor()
+        if height_human_floor >= 0.94:
+            reward += REWARD_HUMAN_STAYING_UP_POSITIVE
+        elif height_human_floor > 2:
+            reward += REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE
+        else:
+            reward += REWARD_HUMAN_STAYING_UP_NEGATIVE
+        return reward
+
+    def is_human_on_goal(self):
+        distance_from_goal = self.memory["distance_human_goal"]
+        return distance_from_goal[0] < 0.2 and distance_from_goal[1] < 0.2
 
     def apply(self, action):
         self.human.apply_motor_power(information=action)
         self.client.stepSimulation()
-        return self.get_state(), self.get_reward()
-
-    def is_human_on_goal(self):
-        (human_root_position, _) = self.human.get_position_orientation()
-        human_coord = Coordinate(human_root_position[0], human_root_position[1], human_root_position[2])
-        distance_from_goal = human_coord.abs_distance_from(self.goal_coord)
-        return distance_from_goal[0] < 0.2 and distance_from_goal[1] < 0.2
+        new_state = self.get_state()
+        reward = self.get_reward()
+        self.update_memory()
+        done = self.is_human_on_goal()
+        return new_state, reward, done
 
     @staticmethod
     def get_shape_state():

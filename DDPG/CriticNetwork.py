@@ -17,7 +17,7 @@ class CriticNetwork(object):
         init_w = tf.random_normal_initializer(0., 0.001)
         init_b = tf.constant_initializer(0.01)
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(self.input_size, input_dim=self.input_dim, activation=tf.keras.activations.tanh,
+            tf.keras.layers.Dense(self.input_size, input_dim=self.input_size, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
             tf.keras.layers.Dense(200, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
@@ -29,11 +29,11 @@ class CriticNetwork(object):
                       optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
         return model
 
-    def predict(self, state, action):
-        return self.model.predict(state + action)
+    def predict(self, state):
+        return self.model.predict(state)
 
-    def fit(self, state, action, target):
-        self.model.fit(state + action, target, epochs=1, verbose=0)
+    def fit(self, state, target):
+        self.model.fit(state, target, epochs=1, verbose=0)
 
     def save_checkpoint(self):
         print('----- CriticNetwork : Saving checkpoint -----')

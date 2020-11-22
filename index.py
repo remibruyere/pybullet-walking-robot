@@ -37,18 +37,16 @@ if __name__ == "__main__":
     score_history = []
 
     for j in range(MAX_EPISODES):
-        # reset env
         environment.reset_all_simulation()
-        done = False
         agent.reset()
         # agent noise reset
-        while not done:
+        while not agent.done and agent.score > -150:
             agent.environment.client.stepSimulation()
-            agent.test()
-            # best_action = agent.best_action()
-            # done = agent.do(best_action)
-            # agent.update_policy(done=done)
-            # print(agent.get_position_and_rotation())
+            # agent.test()
+            best_action = agent.best_action()
+            agent.do(best_action)
+            agent.update_policy()
+            print(agent.score)
             time.sleep(1. / 240.)
 
         score_history.append(agent.score)

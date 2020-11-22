@@ -15,68 +15,37 @@ class Policy:
         self.discount_factor = discount_factor
         self.actor_input_dim = actor_input_dim
         self.actor_action_dim = actor_action_dim
-        self.actor_action_size = len(actor_action_dim)
+        self.actor_action_size = len(self.actor_action_dim)
         self.critic_input_dim = critic_input_dim
         self.value_size = 1
-        # self.actor = ActorNetwork(input_dim=actor_input_dim, action_dim=actor_action_dim,
-        #                           learning_rate=self.actor_learning_rate)
-        # self.critic = CriticNetwork(input_dim=critic_input_dim, value_size=self.value_size,
-        #                             learning_rate=self.critic_learning_rate)
-        self.best_actor_action = ()
+        self.actor = ActorNetwork(input_dim=self.actor_input_dim, action_dim=self.actor_action_dim,
+                                  learning_rate=self.actor_learning_rate)
+        self.critic = CriticNetwork(input_dim=self.critic_input_dim, value_size=self.value_size,
+                                    learning_rate=self.critic_learning_rate)
 
-    def __repr__(self):
-        return self.best_actor_action
+    @staticmethod
+    def state_to_dataset(state):
+        return np.array([state])
 
     def best_action(self, state):
-        self.best_actor_action = self.actor.get_action(state=state)
-        # self.best_action = (
-        #     0,
-        #     0,
-        #     0,
-        #     0,
-        #     0.0001, 0.0001, 0.0001, 1000,
-        #     0.0001, 1000,
-        #     -0.0001, 0.0001, 1000,
-        #     0.0001, 0.0001, 1000,
-        #     0.0001, 1000,
-        #     0.0001, 1000,
-        #     -0.0001, 0.0001, 1000,
-        #     0.0001, 0.0001, 1000
-        # )  # fit
-        action = (
-            (
-                (4, self.best_actor_action[0]), (7, self.best_actor_action[1]), (10, self.best_actor_action[2]),
-                (13, self.best_actor_action[3])
-            ),  # revolute
-            (
-                (1, (self.best_actor_action[4], self.best_actor_action[5], self.best_actor_action[6]),
-                 self.best_actor_action[7]),
-                (2, (0, 0, self.best_actor_action[8]), self.best_actor_action[9]),
-                (3, (self.best_actor_action[10], 0, self.best_actor_action[11]), self.best_actor_action[12]),
-                (9, (self.best_actor_action[13], 0, self.best_actor_action[14]), self.best_actor_action[15]),
-                (5, (0, 0, self.best_actor_action[16]), self.best_actor_action[17]),
-                (11, (0, 0, self.best_actor_action[18]), self.best_actor_action[19]),
-                (6, (self.best_actor_action[20], 0, self.best_actor_action[21]), self.best_actor_action[22]),
-                (12, (self.best_actor_action[23], 0, self.best_actor_action[24]), self.best_actor_action[25])
-            )  # spherical
-        )
-        return action
+        best_actor_action = self.actor.get_action(state=self.state_to_dataset(state))[0]
+        return tuple(best_actor_action)
 
-    def update(self, state, action, reward, next_state, done):
+    def update(self, previous_state, action, reward, new_state, done):
         target = np.zeros((1, self.value_size))
-        advantages = np.zeros((1, self.actor_action_size))
+        advantages = None
 
-        next_action = self.best_action(next_state)
+        next_action = self.best_action(new_state)
 
-        value = self.critic.predict(state=state, action=action)
-        next_value = self.critic.predict(state=next_state, action=next_action)
+        value = self.critic.predict(state=self.state_to_dataset(previous_state + action))[0]
+        next_value = self.critic.predict(state=self.state_to_dataset(new_state + next_action))[0]
 
         if done:
-            advantages[0][action] = reward - value
+            advantages = np.full(self.actor_action_size, reward - value)
             target[0][0] = reward
         else:
-            advantages[0][action] = reward + self.discount_factor * next_value - value
+            advantages = np.full((1, self.actor_action_size), reward + self.discount_factor * next_value - value)
             target[0][0] = reward + self.discount_factor * next_value
 
-        self.actor.fit(state=state, advantages=advantages)
-        self.critic.fit(state=state, action=action, target=target)
+        self.actor.fit(state=self.state_to_dataset(previous_state), advantages=advantages)
+        self.critic.fit(state=self.state_to_dataset(previous_state + action), target=target)
