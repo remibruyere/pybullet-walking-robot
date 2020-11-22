@@ -5,38 +5,56 @@ from policy import Policy
 class Agent(object):
     def __init__(self, environment: Environment):
         self.environment = environment
-        self.policy = Policy()
-        self.reset()
-
-    def reset(self):
-        self.state = None  # TODO : get state start
+        self.state = self.environment.get_state()
         self.previous_state = self.state
         self.score = 0
+        self.reward = 0
+        self.last_action = None
+        self.policy = Policy(actor_input_dim=self.environment.get_shape_state(),
+                             actor_action_dim=self.get_shape_action(),
+                             critic_input_dim=self.environment.get_shape_state() + self.get_shape_action())
+
+    def reset(self):
+        self.state = self.environment.get_state()
+        self.previous_state = self.state
+        self.score = 0
+        self.reward = 0
+        self.last_action = None
 
     def best_action(self):
-        return self.policy.best_action(self.state)
+        return self.policy.best_action(state=self.state)
 
-    def do(self):
-        information = (
-            (
-                # (4, 0), (7, 0), (10, 0), (13, 0)
-            ),  # revolute
-            (
-                # (1, (0.0001, 0.0001, 0.0001), 1000),
-                # (2, (0, 0, 0.0001), 1000),
-                # (3, (0.0001, 0, 0.0001), 1000),
-                # (9, (0.0001, 0, 0.0001), 1000),
-                # (5, (0, 0, 0.0001), 1000),
-                # (11, (0, 0, 0.0001), 1000),
-                # (6, (-0.0001, 0, 0.0001), 1000),
-                (12, (0.0001, 0, 0.0001), 1000),
-            )  # spherical
-        )
-        self.environment.human.apply_motor_power(information=information)
-        self.environment.apply(None)
-        # self.previous_state = self.state
-        # self.state, self.reward = self.environment.apply(self.state)
-        # self.score += self.reward
+    def do(self, action):
+        self.previous_state = self.state
+        self.state, self.reward = self.environment.apply(action=action)
+        self.score += self.reward
+        return self.environment.is_human_on_goal()
 
     def get_position_and_rotation(self):
         return self.environment.client.getBasePositionAndOrientation(self.environment.human.body)
+
+    def update_policy(self, done):
+        self.policy.update(state=self.previous_state, action=self.last_action, reward=self.reward,
+                           next_state=self.state, done=done)
+
+    @staticmethod
+    def get_shape_action():
+        return (
+            # 4 jointures revolute avec force
+            0,
+            0,
+            0,
+            0,
+            # 8 jointures spherical avec angle + force
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        )
+
+    def test(self):
+        self.environment.test()

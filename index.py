@@ -1,10 +1,7 @@
-import math
 import time
 
 from agent import Agent
 from environment import Environment
-from object.floor import Floor
-from object.human_body import HumanBody
 
 """
     Mouvement possible par tour :
@@ -15,10 +12,10 @@ from object.human_body import HumanBody
             - position du corps par rapport au sol - 3
             * position du corps par rapport à la ligne d'arrivée - 2
             - position / angle de toutes les articulations 
-                - 4 (revolute (position x y z + force)) + 90 (spherical (positon x y z + angle x' y' z')))
+                - 4 (revolute (position x y z + force)) + 64 (spherical (positon x y z + angle x' y' z')))
         - sortie : 
             - tuple avec toutes les articulations (angles à ajouter et forces) 
-                - 2 (revolute (force)) + 90 (spherical (angle x' y' z' + forces x y z)))
+                - 4 (revolute (force)) + 64 (spherical (angle x' y' z' + force)))
     
     Récompenses:
         - Réduction de la distance entre le milieu du corps et la ligne d'arrivée: {OUI: +5, NON: -2}
@@ -28,13 +25,35 @@ from object.human_body import HumanBody
         - Coût d'un mouvement pris en compte (plus on bouge, plus on reçoit des récompenses négatives)
 """
 
+MAX_EPISODES = 100
+LEARNING_RATE = 0.01
+DISCOUNT_RATE = 0.95
+
 if __name__ == "__main__":
     environment = Environment()
 
     agent = Agent(environment=environment)
 
-    for i in range(10000):
-        environment.client.stepSimulation()
-        agent.do()
-        print(agent.get_position_and_rotation())
-        time.sleep(1. / 240.)
+    score_history = []
+
+    for j in range(MAX_EPISODES):
+        # reset env
+        environment.reset_all_simulation()
+        done = False
+        agent.reset()
+        # agent noise reset
+        while not done:
+            agent.environment.client.stepSimulation()
+            agent.test()
+            # best_action = agent.best_action()
+            # done = agent.do(best_action)
+            # agent.update_policy(done=done)
+            # print(agent.get_position_and_rotation())
+            time.sleep(1. / 240.)
+
+        score_history.append(agent.score)
+
+        if j % 20 == 0:
+            pass
+            # save models
+            # draw charts
