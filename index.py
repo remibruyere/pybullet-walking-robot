@@ -46,7 +46,7 @@ if __name__ == "__main__":
             best_action = agent.best_action()
             agent.do(best_action)
             agent.update_policy()
-            print(agent.score)
+            print("score", agent.score)
             time.sleep(1. / 240.)
 
         score_history.append(agent.score)

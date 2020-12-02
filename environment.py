@@ -7,12 +7,12 @@ from object.human_body import HumanBody
 from object.soccerball import Soccerball
 from utils.Coordinate import Coordinate
 
-REWARD_STAYING_ALIVE = 1
+REWARD_STAYING_ALIVE = 0.3
 
 REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 5
-REWARD_HUMAN_STAYING_UP_POSITIVE = 2
+REWARD_HUMAN_STAYING_UP_POSITIVE = 1
 
-REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -3
+REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -10
 REWARD_HUMAN_STAYING_UP_NEGATIVE = -40
 REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -50
 
@@ -135,5 +135,23 @@ class Environment(object):
         )
 
     def test(self):
-        height = round(self.human.get_position_orientation()[0][2] - 1.410, 4)
-        print(self.human.get_joins_information())
+        # height = round(self.human.get_position_orientation()[0][2] - 1.410, 4)
+        # print(self.human.get_joins_information())
+        self.human.apply_motor_power(information=(
+            (
+                (4, 0),
+                (7, 0),
+                (10, 0),
+                (13, 0)
+            ),  # revolute
+            (
+                (1, (0, 0, 0), 0),
+                (2, (0, 0, 0), 0),
+                (3, (0, 0, 0), 0),
+                (9, (0, 0, 0), 0),
+                (5, (0, 0, 0), 0),
+                (11, (0, 0, 0), 0),
+                (6, (0, 0, 0), 0),
+                (12, (0, 0, 0), 0)
+            )
+        ))

@@ -80,10 +80,10 @@ class HumanBody(object):
                                                                 self.DEFAULT_MOTOR_FORCE])
 
     def initialise_motor_power(self) -> None:
-        self.motor_name_revolute += ["right_knee", "left_knee"]
-        self.motor_power_revolute += [200, 200]
-        self.motor_name_revolute += ["right_elbow", "left_elbow"]
-        self.motor_power_revolute += [75, 75]
+        self.motor_name_revolute += ["right_knee", "right_elbow"]
+        self.motor_power_revolute += [500, 300]
+        self.motor_name_revolute += ["left_knee", "left_elbow"]
+        self.motor_power_revolute += [500, 300]
         self.motors_revolute = [self.join_dict_revolute[n] for n in self.motor_name_revolute]
 
         self.motor_name_spherical += ["chest"]
@@ -133,7 +133,8 @@ class HumanBody(object):
             return join_info.join_id
 
         joins_information.sort(key=get_join_id)
-        forces = [information.join_torque for information in joins_information]
+        forces = [a * b for a, b in
+                  zip([information.join_torque for information in joins_information], self.motor_power_revolute)]
         self.client.setJointMotorControlArray(self.body, self.motors_revolute, controlMode=self.client.TORQUE_CONTROL,
                                               forces=forces)
 
@@ -142,23 +143,23 @@ class HumanBody(object):
             return join_info.join_id
 
         joins_information.sort(key=get_join_id)
-        moves: [SphericalJoinInformation] = [self.get_new_state_spherical_join(join_id=information.join_id,
-                                                                               position_to_add=information.position,
-                                                                               torque=information.join_torque)
-                                             for information in joins_information]
+        moves = [self.get_new_state_spherical_join(join_id=information.join_id,
+                                                   position_to_add=information.position,
+                                                   torque=information.join_torque)
+                 for information in joins_information]
         join_indices = [move.join_id for move in moves]
         target_positions = [move.position for move in moves]
         target_velocities = [[0, 0, 0]] * len(target_positions)
         kps = [1000] * len(target_positions)
         kds = [1000] * len(target_positions)
-        forces = [[1000, 1000, 1000]] * len(target_positions)
-        print(self.body, join_indices,
-              target_positions,
-              target_velocities,
-              self.client.POSITION_CONTROL,
-              kps,
-              kds,
-              forces)
+        forces = [[250 * move.join_torque + 250] * 3 for move in moves]
+        # print(self.body, join_indices,
+        #       target_positions,
+        #       target_velocities,
+        #       self.client.POSITION_CONTROL,
+        #       kps,
+        #       kds,
+        #       forces)
         self.client.setJointMotorControlMultiDofArray(self.body, join_indices,
                                                       targetPositions=target_positions,
                                                       targetVelocities=target_velocities,

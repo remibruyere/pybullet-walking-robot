@@ -27,12 +27,10 @@ class Agent(object):
     def raw_action_to_usable_action(action):
         return (
             (
-                (4, action[0]), (7, action[1]), (10, action[2]),
-                (13, action[3])
+                (4, action[0]), (7, action[1]), (10, action[2]), (13, action[3])
             ),  # revolute
             (
-                (1, (action[4], action[5], action[6]),
-                 action[7]),
+                (1, (action[4], action[5], action[6]), action[7]),
                 (2, (0, 0, action[8]), action[9]),
                 (3, (action[10], 0, action[11]), action[12]),
                 (9, (action[13], 0, action[14]), action[15]),
