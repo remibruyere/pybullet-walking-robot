@@ -1,4 +1,5 @@
 import time
+import matplotlib.pyplot as plt
 
 from agent import Agent
 from environment import Environment
@@ -35,10 +36,12 @@ if __name__ == "__main__":
     agent = Agent(environment=environment)
 
     score_history = []
+    best_score_history = []
 
     for j in range(MAX_EPISODES):
         environment.reset_all_simulation()
         agent.reset()
+        best_score = None
         # agent noise reset
         while not agent.done and agent.score > -150:
             agent.environment.client.stepSimulation()
@@ -46,12 +49,17 @@ if __name__ == "__main__":
             best_action = agent.best_action()
             agent.do(best_action)
             agent.update_policy()
-            print("score", agent.score)
+            if best_score is None or best_score < agent.score:
+                best_score = agent.score
+            # print("score", agent.score)
             time.sleep(1. / 240.)
 
         score_history.append(agent.score)
+        best_score_history.append(best_score)
 
-        if j % 20 == 0:
-            pass
+        if j % 5 == 0:
+            plt.close()
+            plt.plot(score_history)
+            plt.plot(best_score_history)
+            plt.show()
             # save models
-            # draw charts

@@ -40,7 +40,7 @@ class Policy:
         value = self.critic.predict(state=self.state_to_dataset(previous_state + action))[0]
         next_value = self.critic.predict(state=self.state_to_dataset(new_state + next_action))[0]
 
-        print(value, next_value)
+        # print(value, next_value)
 
         if done:
             advantages = np.full(self.actor_action_size, reward - value)

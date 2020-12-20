@@ -9,11 +9,11 @@ from utils.Coordinate import Coordinate
 
 REWARD_STAYING_ALIVE = 0.3
 
-REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 5
+REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 15
 REWARD_HUMAN_STAYING_UP_POSITIVE = 1
 
-REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -10
-REWARD_HUMAN_STAYING_UP_NEGATIVE = -40
+REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -5
+REWARD_HUMAN_STAYING_UP_NEGATIVE = -60
 REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -50
 
 
@@ -38,7 +38,7 @@ class Environment(object):
         human_start_pos = Coordinate(0, 0, 1.411)
         human_start_orientation = self.client.getQuaternionFromEuler([math.pi / 2, 0, 0])
         human = HumanBody(self.client, human_start_pos, human_start_orientation, 0.4)
-        human.print_joints()
+        # human.print_joints()
 
         human.initialise_motor_controls()
         human.initialise_motor_power()
@@ -54,7 +54,9 @@ class Environment(object):
         self.memory = {"distance_human_goal": self.get_distance_human_goal()}
 
     def update_memory(self):
-        self.memory = {"distance_human_goal": self.get_distance_human_goal()}
+        new_distance = self.get_distance_human_goal()
+        if new_distance[0] > self.memory["distance_human_goal"][0]:
+            self.memory = {"distance_human_goal": new_distance}
 
     def get_height_human_from_floor(self):
         (human_root_position, human_root_orientation) = self.human.get_position_orientation()
@@ -82,10 +84,10 @@ class Environment(object):
 
     def get_reward(self):
         # reward to stay alive
-        reward = 1
+        reward = REWARD_STAYING_ALIVE
         # body distance from goal
         new_distance_human_goal = self.get_distance_human_goal()
-        if new_distance_human_goal < self.memory["distance_human_goal"]:
+        if new_distance_human_goal[0] < self.memory["distance_human_goal"][0] - 0.01:
             reward += REWARD_HUMAN_CLOSER_GOAL_POSITIVE
         else:
             reward += REWARD_HUMAN_CLOSER_GOAL_NEGATIVE

@@ -1,6 +1,3 @@
-import math
-
-
 class SphericalJoinInformation(object):
     def __init__(self, join_id: int, position: (float, float, float, float), join_torque: float):
         self.join_id: int = join_id

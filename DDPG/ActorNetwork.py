@@ -24,6 +24,8 @@ class ActorNetwork(object):
                                   kernel_initializer=init_w, bias_initializer=init_b),
             tf.keras.layers.Dense(200, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
+            tf.keras.layers.Dense(200, activation=tf.keras.activations.tanh,
+                                  kernel_initializer=init_w, bias_initializer=init_b),
             tf.keras.layers.Dense(self.action_size, activation=tf.nn.softmax,
                                   kernel_initializer=tf.keras.initializers.he_uniform)
         ])

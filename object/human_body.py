@@ -1,7 +1,7 @@
 from typing import List
 
-from object.revolute_join_information import RevoluteJoinInformation
-from object.spherical_join_information import SphericalJoinInformation
+from utils.revolute_join_information import RevoluteJoinInformation
+from utils.spherical_join_information import SphericalJoinInformation
 from server.client_py_bullet import ClientPyBullet
 from utils.Coordinate import Coordinate
 
@@ -152,7 +152,7 @@ class HumanBody(object):
         target_velocities = [[0, 0, 0]] * len(target_positions)
         kps = [1000] * len(target_positions)
         kds = [1000] * len(target_positions)
-        forces = [[250 * move.join_torque + 250] * 3 for move in moves]
+        forces = [[500 * move.join_torque + 500] * 3 for move in moves]
         # print(self.body, join_indices,
         #       target_positions,
         #       target_velocities,
