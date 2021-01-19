@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import tensorflow as tf
 
 
@@ -17,8 +16,8 @@ class ActorNetwork(object):
         self.model = self._build_network()
 
     def _build_network(self):
-        init_w = tf.random_normal_initializer(0., 0.01)
-        init_b = tf.constant_initializer(0.01)
+        init_w = tf.random_normal_initializer(0., 0.1)
+        init_b = tf.random_uniform_initializer(-0.05, 0.05)
         model = tf.keras.Sequential([
             tf.keras.layers.Dense(24, input_shape=(self.input_size,), activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
@@ -33,7 +32,7 @@ class ActorNetwork(object):
         ])
         model.summary()
         model.compile(loss=tf.keras.losses.mean_squared_error,
-                      optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
+                      optimizer=tf.keras.optimizers.SGD(lr=self.learning_rate))
         return model
 
     def get_action(self, state):
@@ -44,18 +43,18 @@ class ActorNetwork(object):
 
     def save_checkpoint(self):
         print('----- ActorNetwork : Saving checkpoint -----')
-        self.model.save_weights(self.output_dir + "/checkpoints/actor")
+        self.model.save_weights(self.checkpoint_file + "/checkpoints/actor")
 
     def load_checkpoint(self):
         print('----- ActorNetwork : Load checkpoint -----')
         self.model = self._build_network()
-        self.model.load_weights(self.output_dir + "/checkpoints/actor")
+        self.model.load_weights(self.checkpoint_file + "/checkpoints/actor")
 
     def save_best(self):
         print('----- ActorNetwork : Saving best checkpoint -----')
-        self.model.save_weights(self.output_dir + "/best/actor")
+        self.model.save_weights(self.checkpoint_file + "/best/actor")
 
     def load_best(self):
         print('----- ActorNetwork : Load checkpoint -----')
         self.model = self._build_network()
-        self.model.load_weights(self.output_dir + "/best/actor")
+        self.model.load_weights(self.checkpoint_file + "/best/actor")

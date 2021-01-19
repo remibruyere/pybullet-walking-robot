@@ -7,14 +7,14 @@ from object.human_body import HumanBody
 from object.soccerball import Soccerball
 from utils.Coordinate import Coordinate
 
-REWARD_STAYING_ALIVE = 2
+REWARD_STAYING_ALIVE = 1
 
-REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 20
-REWARD_HUMAN_STAYING_UP_POSITIVE = 1
+REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 30
+REWARD_HUMAN_STAYING_UP_POSITIVE = 2
 
-REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -30
-REWARD_HUMAN_STAYING_UP_NEGATIVE = -90
-REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -150
+REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -50
+REWARD_HUMAN_STAYING_UP_NEGATIVE = -60
+REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -80
 
 
 class Environment(object):
@@ -47,10 +47,6 @@ class Environment(object):
 
     def reset_all_simulation(self):
         self.client.removeBody(self.human.body)
-        self.client.removeBody(self.soccerball.body)
-        self.client.removeBody(self.floor.body)
-        self.floor = self.add_floor()
-        self.soccerball = self.add_soccerball()
         self.human = self.add_human()
         self.memory = {"distance_human_goal": self.get_distance_human_goal()}
 
@@ -88,26 +84,28 @@ class Environment(object):
         reward = REWARD_STAYING_ALIVE
         # body distance from goal
         new_distance_human_goal = self.get_distance_human_goal()
+        # print(new_distance_human_goal[0], self.memory["distance_human_goal"][0] - 0.03)
         if new_distance_human_goal[0] < self.memory["distance_human_goal"][0] - 0.03:
-            print("closer !!!")
+            # print("closer !!!")
             reward += REWARD_HUMAN_CLOSER_GOAL_POSITIVE
         else:
             reward += REWARD_HUMAN_CLOSER_GOAL_NEGATIVE
         # body height from the ground
         # (<0.94 = lower than 2/3 of the maximum standing value (1.410))
         height_human_floor = self.get_height_human_from_floor()
-        if height_human_floor >= 0.94:
+        if 1.15 <= height_human_floor < 2:
             reward += REWARD_HUMAN_STAYING_UP_POSITIVE
         elif height_human_floor > 2:
             reward += REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE
         else:
             reward += REWARD_HUMAN_STAYING_UP_NEGATIVE
+        print(reward)
         return reward
 
     def is_human_on_goal(self):
         distance_from_goal = self.memory["distance_human_goal"]
         # print(distance_from_goal)
-        return distance_from_goal[0] < 0.5 and distance_from_goal[1] < 0.5
+        return distance_from_goal[0] < 0.5 and distance_from_goal[2] < 0.5
 
     def apply(self, action):
         self.human.apply_motor_power(information=action)

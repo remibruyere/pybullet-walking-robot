@@ -3,8 +3,8 @@ import numpy as np
 from DDPG.ActorNetwork import ActorNetwork
 from DDPG.CriticNetwork import CriticNetwork
 
-DEFAULT_LEARNING_RATE = 0.01
-DEFAULT_DISCOUNT_FACTOR = 0.99
+DEFAULT_LEARNING_RATE = 3e-4
+DEFAULT_DISCOUNT_FACTOR = 0.95
 
 
 class Policy:
@@ -23,6 +23,22 @@ class Policy:
         self.critic = CriticNetwork(input_dim=self.critic_input_dim, value_size=self.value_size,
                                     learning_rate=self.critic_learning_rate)
 
+    def save_checkpoint(self):
+        self.actor.save_checkpoint()
+        self.critic.save_checkpoint()
+
+    def load_checkpoint(self):
+        self.actor.load_checkpoint()
+        self.critic.load_checkpoint()
+
+    def save_best(self):
+        self.actor.save_best()
+        self.critic.save_best()
+
+    def load_best(self):
+        self.actor.load_best()
+        self.critic.load_best()
+
     @staticmethod
     def state_to_dataset(state):
         return np.array([state])
@@ -33,7 +49,6 @@ class Policy:
 
     def update(self, previous_state, action, reward, new_state, done):
         target = np.zeros((1, self.value_size))
-        advantages = None
 
         next_action = self.best_action(new_state)
 

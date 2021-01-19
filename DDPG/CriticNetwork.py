@@ -26,7 +26,7 @@ class CriticNetwork(object):
         ])
         model.summary()
         model.compile(loss=tf.keras.losses.mean_squared_error,
-                      optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
+                      optimizer=tf.keras.optimizers.SGD(lr=self.learning_rate))
         return model
 
     def predict(self, state):
@@ -37,18 +37,18 @@ class CriticNetwork(object):
 
     def save_checkpoint(self):
         print('----- CriticNetwork : Saving checkpoint -----')
-        self.model.save_weights(self.output_dir + "/checkpoints/critic")
+        self.model.save_weights(self.checkpoint_file + "/checkpoints/critic")
 
     def load_checkpoint(self):
         print('----- CriticNetwork : Load checkpoint -----')
         self.model = self._build_network()
-        self.model.load_weights(self.output_dir + "/checkpoints/critic")
+        self.model.load_weights(self.checkpoint_file + "/checkpoints/critic")
 
     def save_best(self):
         print('----- CriticNetwork : Saving best checkpoint -----')
-        self.model.save_weights(self.output_dir + "/best/critic")
+        self.model.save_weights(self.checkpoint_file + "/best/critic")
 
     def load_best(self):
         print('----- CriticNetwork : Load checkpoint -----')
         self.model = self._build_network()
-        self.model.load_weights(self.output_dir + "/best/critic")
+        self.model.load_weights(self.checkpoint_file + "/best/critic")

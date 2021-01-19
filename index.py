@@ -1,5 +1,6 @@
 import time
 import matplotlib.pyplot as plt
+import numpy as np
 
 from agent import Agent
 from environment import Environment
@@ -30,17 +31,17 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
         - Coût d'un mouvement pris en compte (plus on bouge, plus on reçoit des récompenses négatives)
 """
 
-MAX_EPISODES = 100
-LEARNING_RATE = 0.01
-DISCOUNT_RATE = 0.95
+MAX_EPISODES = 10000
 
 if __name__ == "__main__":
     environment = Environment()
 
     agent = Agent(environment=environment)
 
+    max_best_score = 0
     score_history = []
     best_score_history = []
+    average_best_score_history = []
 
     for j in range(1, MAX_EPISODES):
         environment.reset_all_simulation()
@@ -61,10 +62,17 @@ if __name__ == "__main__":
 
         score_history.append(agent.score)
         best_score_history.append(best_score)
+        average_best_score_history.append(np.mean(best_score_history))
 
-        if j % 20 == 0:
+        if max_best_score < best_score:
+            agent.policy.save_best()
+            max_best_score = best_score
+
+        if j % 20 == 19:
             plt.close()
             plt.plot(score_history)
             plt.plot(best_score_history)
+            plt.plot(average_best_score_history)
             plt.show()
             # save models
+            agent.policy.save_checkpoint()

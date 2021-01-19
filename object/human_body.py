@@ -166,7 +166,7 @@ class HumanBody(object):
         target_velocities = [[0, 0, 0]] * len(target_positions)
         kps = [5] * len(target_positions)
         kds = [1] * len(target_positions)
-        forces = [[40 * move.join_torque + 50] * 3 for move in moves]
+        forces = [[50 * move.join_torque + 50] * 3 for move in moves]
         # print(self.body, join_indices,
         #       target_positions,
         #       target_velocities,
