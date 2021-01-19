@@ -22,15 +22,17 @@ class ActorNetwork(object):
         model = tf.keras.Sequential([
             tf.keras.layers.Dense(24, input_shape=(self.input_size,), activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
-            tf.keras.layers.Dense(200, activation=tf.keras.activations.tanh,
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
-            tf.keras.layers.Dense(200, activation=tf.keras.activations.tanh,
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
-            tf.keras.layers.Dense(self.action_size, activation=tf.nn.softmax,
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.tanh,
+                                  kernel_initializer=init_w, bias_initializer=init_b),
+            tf.keras.layers.Dense(self.action_size, activation=tf.keras.activations.tanh,
                                   kernel_initializer=tf.keras.initializers.he_uniform)
         ])
         model.summary()
-        model.compile(loss=tf.keras.losses.categorical_crossentropy,
+        model.compile(loss=tf.keras.losses.mean_squared_error,
                       optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
         return model
 

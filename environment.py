@@ -7,14 +7,14 @@ from object.human_body import HumanBody
 from object.soccerball import Soccerball
 from utils.Coordinate import Coordinate
 
-REWARD_STAYING_ALIVE = 0.3
+REWARD_STAYING_ALIVE = 2
 
-REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 15
+REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 20
 REWARD_HUMAN_STAYING_UP_POSITIVE = 1
 
-REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -5
-REWARD_HUMAN_STAYING_UP_NEGATIVE = -60
-REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -50
+REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -30
+REWARD_HUMAN_STAYING_UP_NEGATIVE = -90
+REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -150
 
 
 class Environment(object):
@@ -42,6 +42,7 @@ class Environment(object):
 
         human.initialise_motor_controls()
         human.initialise_motor_power()
+        human.initialise_spherical_motor_axis_limit()
         return human
 
     def reset_all_simulation(self):
@@ -87,7 +88,8 @@ class Environment(object):
         reward = REWARD_STAYING_ALIVE
         # body distance from goal
         new_distance_human_goal = self.get_distance_human_goal()
-        if new_distance_human_goal[0] < self.memory["distance_human_goal"][0] - 0.01:
+        if new_distance_human_goal[0] < self.memory["distance_human_goal"][0] - 0.03:
+            print("closer !!!")
             reward += REWARD_HUMAN_CLOSER_GOAL_POSITIVE
         else:
             reward += REWARD_HUMAN_CLOSER_GOAL_NEGATIVE
@@ -104,7 +106,8 @@ class Environment(object):
 
     def is_human_on_goal(self):
         distance_from_goal = self.memory["distance_human_goal"]
-        return distance_from_goal[0] < 0.2 and distance_from_goal[1] < 0.2
+        # print(distance_from_goal)
+        return distance_from_goal[0] < 0.5 and distance_from_goal[1] < 0.5
 
     def apply(self, action):
         self.human.apply_motor_power(information=action)
@@ -141,10 +144,10 @@ class Environment(object):
         # print(self.human.get_joins_information())
         self.human.apply_motor_power(information=(
             (
-                (4, 0),
-                (7, 0),
-                (10, 0),
-                (13, 0)
+                (4, 0),  # -1 et 0
+                (7, 0),  # 0 et 1
+                (10, 0),  # -1 et 0
+                (13, 0)  # 0 et 1
             ),  # revolute
             (
                 (1, (0, 0, 0), 0),

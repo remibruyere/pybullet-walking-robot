@@ -4,7 +4,7 @@ from DDPG.ActorNetwork import ActorNetwork
 from DDPG.CriticNetwork import CriticNetwork
 
 DEFAULT_LEARNING_RATE = 0.01
-DEFAULT_DISCOUNT_FACTOR = 0.95
+DEFAULT_DISCOUNT_FACTOR = 0.99
 
 
 class Policy:

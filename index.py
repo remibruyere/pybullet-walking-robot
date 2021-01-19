@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 from agent import Agent
 from environment import Environment
 
+import tensorflow as tf
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
 """
     Mouvement possible par tour :
         - bouger une/les 12 articulations sur une infinité d'angle entre 1 et 3 axes
@@ -38,15 +42,16 @@ if __name__ == "__main__":
     score_history = []
     best_score_history = []
 
-    for j in range(MAX_EPISODES):
+    for j in range(1, MAX_EPISODES):
         environment.reset_all_simulation()
         agent.reset()
         best_score = None
         # agent noise reset
-        while not agent.done and agent.score > -150:
+        while not agent.done and agent.score > -400:
             agent.environment.client.stepSimulation()
             # agent.test()
             best_action = agent.best_action()
+            # print(best_action)
             agent.do(best_action)
             agent.update_policy()
             if best_score is None or best_score < agent.score:
@@ -57,7 +62,7 @@ if __name__ == "__main__":
         score_history.append(agent.score)
         best_score_history.append(best_score)
 
-        if j % 5 == 0:
+        if j % 20 == 0:
             plt.close()
             plt.plot(score_history)
             plt.plot(best_score_history)

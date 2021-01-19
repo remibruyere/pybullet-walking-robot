@@ -94,7 +94,7 @@
     <joint name="right_knee" type="revolute">
         <parent link="right_hip"/>
         <child link="right_knee"/>
-        <limit effort="1000.0" lower="-3.14" upper="0." velocity="0.5"/>
+        <limit effort="1000.0" lower="-2.5" upper="0." velocity="0.5"/>
         <origin rpy="0 0 0" xyz="0.000000 -1.686184 0.000000"/>
         <axis xyz="0.000000 0.000000 1.000000"/>
     </joint>
@@ -150,7 +150,7 @@
     <joint name="right_elbow" type="revolute">
         <parent link="right_shoulder"/>
         <child link="right_elbow"/>
-        <limit effort="1000.0" lower="0" upper="3.14" velocity="0.5"/>
+        <limit effort="1000.0" lower="0" upper="2.5" velocity="0.5"/>
         <origin rpy="0 0 0" xyz="0.000000 -1.099152 0.000000"/>
         <axis xyz="0.000000 0.000000 1.000000"/>
     </joint>
@@ -206,7 +206,7 @@
     <joint name="left_knee" type="revolute">
         <parent link="left_hip"/>
         <child link="left_knee"/>
-        <limit effort="1000.0" lower="-3.14" upper="0." velocity="0.5"/>
+        <limit effort="1000.0" lower="-2.5" upper="0." velocity="0.5"/>
         <origin rpy="0 0 0" xyz="0.000000 -1.686184 0.000000"/>
         <axis xyz="0.000000 0.000000 1.000000"/>
     </joint>
@@ -262,7 +262,7 @@
     <joint name="left_elbow" type="revolute">
         <parent link="left_shoulder"/>
         <child link="left_elbow"/>
-        <limit effort="1000.0" lower="0" upper="3.14" velocity="0.5"/>
+        <limit effort="1000.0" lower="0" upper="2.5" velocity="0.5"/>
         <origin rpy="0 0 0" xyz="0.000000 -1.099152 0.000000"/>
         <axis xyz="0.000000 0.000000 1.000000"/>
     </joint>

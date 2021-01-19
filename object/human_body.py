@@ -29,6 +29,7 @@ class HumanBody(object):
         self.motor_name_spherical = []
         self.motor_power_spherical = []
         self.motors_spherical = []
+        self.motor_limit_spherical = {}
 
     def load_urdf(self) -> None:
         """Load URDF model from human xml file to create the body"""
@@ -81,9 +82,9 @@ class HumanBody(object):
 
     def initialise_motor_power(self) -> None:
         self.motor_name_revolute += ["right_knee", "right_elbow"]
-        self.motor_power_revolute += [500, 300]
+        self.motor_power_revolute += [400, 300]
         self.motor_name_revolute += ["left_knee", "left_elbow"]
-        self.motor_power_revolute += [500, 300]
+        self.motor_power_revolute += [400, 300]
         self.motors_revolute = [self.join_dict_revolute[n] for n in self.motor_name_revolute]
 
         self.motor_name_spherical += ["chest"]
@@ -97,6 +98,18 @@ class HumanBody(object):
         self.motor_name_spherical += ["right_shoulder", "left_shoulder"]
         self.motor_power_spherical += [10, 10]
         self.motors_spherical = [self.join_dict_spherical[n] for n in self.motor_name_spherical]
+
+    def initialise_spherical_motor_axis_limit(self) -> None:
+        self.motor_limit_spherical = {
+            1: [-0.15, 0.15, -0.4, 0.4, -0.4, 0.4],
+            2: [-0.45, 0.45, -0.2, 0.2, -0.3, 0.3],
+            3: [-0.45, 0.05, -0.1, 0.1, -0.2, 0.95],
+            9: [-0.05, 0.45, -0.1, 0.1, -0.2, 0.95],
+            5: [-0.05, 0.05, -0.2, 0.2, -0.45, 0.1],
+            11: [-0.05, 0.05, -0.2, 0.2, -0.45, 0.1],
+            6: [-1, 0, -0.1, 0.1, -0.2, 0.95],
+            12: [0, 1, -0.1, 0.1, -0.2, 0.95]
+        }
 
     # Spherical join
 
@@ -112,6 +125,7 @@ class HumanBody(object):
         join_state = self.client.getJointStateMultiDof(self.body, join_id)
         join_information = SphericalJoinInformation(join_id=join_id, position=join_state[0], join_torque=join_state[3])
         join_information.add_to_position(position_to_add=position_to_add)
+        join_information.apply_position_limit(limit=self.motor_limit_spherical.get(join_id))
         join_information.set_torque(torque)
         return join_information
 
@@ -150,9 +164,9 @@ class HumanBody(object):
         join_indices = [move.join_id for move in moves]
         target_positions = [move.position for move in moves]
         target_velocities = [[0, 0, 0]] * len(target_positions)
-        kps = [1000] * len(target_positions)
-        kds = [1000] * len(target_positions)
-        forces = [[500 * move.join_torque + 500] * 3 for move in moves]
+        kps = [5] * len(target_positions)
+        kds = [1] * len(target_positions)
+        forces = [[40 * move.join_torque + 50] * 3 for move in moves]
         # print(self.body, join_indices,
         #       target_positions,
         #       target_velocities,
