@@ -9,12 +9,15 @@ from utils.Coordinate import Coordinate
 
 REWARD_STAYING_ALIVE = 1
 
-REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 30
-REWARD_HUMAN_STAYING_UP_POSITIVE = 2
+REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 10
+REWARD_HUMAN_STAYING_UP_POSITIVE = 3
 
-REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -50
-REWARD_HUMAN_STAYING_UP_NEGATIVE = -60
-REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -80
+REWARD_HUMAN_AHEAD_LASER_WALL = 5
+REWARD_HUMAN_BEHIND_LASER_WALL = -400
+
+REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -10
+REWARD_HUMAN_STAYING_UP_NEGATIVE = -40
+REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -50
 
 
 class Environment(object):
@@ -26,6 +29,7 @@ class Environment(object):
         self.floor: Floor = self.add_floor()
         self.soccerball: Soccerball = self.add_soccerball()
         self.human: HumanBody = self.add_human()
+        self.laser_wall = -0.4
         self.memory = {"distance_human_goal": self.get_distance_human_goal()}
 
     def add_floor(self):
@@ -49,6 +53,7 @@ class Environment(object):
         self.client.removeBody(self.human.body)
         self.human = self.add_human()
         self.memory = {"distance_human_goal": self.get_distance_human_goal()}
+        self.laser_wall = -0.4
 
     def update_memory(self):
         new_distance = self.get_distance_human_goal()
@@ -67,17 +72,21 @@ class Environment(object):
         return distance_from_goal
 
     def get_state(self):
-        height_floor_human = round(self.human.get_position_orientation()[0][2], 4)
         joins_information = self.human.get_joins_information()
         joins_information["revolute"] = [(info[0], info[3]) for info in joins_information["revolute"]]
         joins_information["spherical"] = [info[0] + info[3] for info in joins_information["spherical"]]
+        human_position_orientation = self.human.get_position_orientation()
 
-        result = (height_floor_human,)
+        result = []
         for infos in joins_information.values():
             for info in infos:
-                result += info
+                for value in info:
+                    result.append(value)
+        for human_info in human_position_orientation:
+            for value in human_info:
+                result.append(value)
 
-        return result
+        return tuple(result)
 
     def get_reward(self):
         # reward to stay alive
@@ -85,21 +94,28 @@ class Environment(object):
         # body distance from goal
         new_distance_human_goal = self.get_distance_human_goal()
         # print(new_distance_human_goal[0], self.memory["distance_human_goal"][0] - 0.03)
-        if new_distance_human_goal[0] < self.memory["distance_human_goal"][0] - 0.03:
+        if new_distance_human_goal[0] < self.memory["distance_human_goal"][0] - 0.01:
             # print("closer !!!")
             reward += REWARD_HUMAN_CLOSER_GOAL_POSITIVE
         else:
             reward += REWARD_HUMAN_CLOSER_GOAL_NEGATIVE
+
+        # print(self.laser_wall, self.human.get_position_orientation()[0][0])
+        if self.laser_wall < self.human.get_position_orientation()[0][0]:
+            reward += REWARD_HUMAN_AHEAD_LASER_WALL
+        else:
+            reward += REWARD_HUMAN_BEHIND_LASER_WALL
         # body height from the ground
         # (<0.94 = lower than 2/3 of the maximum standing value (1.410))
         height_human_floor = self.get_height_human_from_floor()
-        if 1.15 <= height_human_floor < 2:
-            reward += REWARD_HUMAN_STAYING_UP_POSITIVE
-        elif height_human_floor > 2:
+        if 0.94 <= height_human_floor < 1.8:
+            pass
+            # reward += REWARD_HUMAN_STAYING_UP_POSITIVE
+        elif height_human_floor >= 1.8:
             reward += REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE
         else:
             reward += REWARD_HUMAN_STAYING_UP_NEGATIVE
-        print(reward)
+        # print(reward)
         return reward
 
     def is_human_on_goal(self):
@@ -113,14 +129,17 @@ class Environment(object):
         new_state = self.get_state()
         reward = self.get_reward()
         self.update_memory()
+        self.laser_wall += 0.005
         done = self.is_human_on_goal()
         return new_state, reward, done
 
     @staticmethod
     def get_shape_state():
         return (
-            # position du corps par rapport au sol
-            0,
+            # position du corps dans l'espace
+            0, 0, 0,
+            # orientation du corps dans l'espace
+            0, 0, 0, 0,
             # 4 jointures revolute avec position + force
             0, 0,
             0, 0,
@@ -152,7 +171,7 @@ class Environment(object):
                 (2, (0, 0, 0), 0),
                 (3, (0, 0, 0), 0),
                 (9, (0, 0, 0), 0),
-                (5, (0, 0, 0), 0),
+                (5, (0, 0.05, 0), 0),
                 (11, (0, 0, 0), 0),
                 (6, (0, 0, 0), 0),
                 (12, (0, 0, 0), 0)

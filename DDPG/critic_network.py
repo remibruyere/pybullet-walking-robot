@@ -17,23 +17,33 @@ class CriticNetwork(object):
         init_w = tf.random_normal_initializer(0., 0.001)
         init_b = tf.constant_initializer(0.01)
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(self.input_size, input_dim=self.input_size, activation=tf.keras.activations.tanh,
+            tf.keras.layers.Dense(self.input_size, input_dim=self.input_size, activation=tf.keras.activations.relu,
                                   kernel_initializer=init_w, bias_initializer=init_b),
-            tf.keras.layers.Dense(200, activation=tf.keras.activations.tanh,
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.relu,
+                                  kernel_initializer=init_w, bias_initializer=init_b),
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.relu,
+                                  kernel_initializer=init_w, bias_initializer=init_b),
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.relu,
                                   kernel_initializer=init_w, bias_initializer=init_b),
             tf.keras.layers.Dense(self.value_size, activation=tf.keras.activations.linear,
                                   kernel_initializer=tf.keras.initializers.he_uniform)
         ])
         model.summary()
         model.compile(loss=tf.keras.losses.mean_squared_error,
-                      optimizer=tf.keras.optimizers.SGD(lr=self.learning_rate))
+                      optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
         return model
 
     def predict(self, state):
         return self.model.predict(state)
 
+    def predict_on_batch(self, state):
+        return self.model.predict_on_batch(state)
+
     def fit(self, state, target):
         self.model.fit(state, target, epochs=1, verbose=0)
+
+    def train_on_batch(self, state, predicted_q_value):
+        self.model.train_on_batch(state, predicted_q_value)
 
     def save_checkpoint(self):
         print('----- CriticNetwork : Saving checkpoint -----')

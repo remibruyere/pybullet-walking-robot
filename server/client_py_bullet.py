@@ -22,7 +22,7 @@ class ClientPyBullet(object):
         self._client = p.connect(self._connection_mode)
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
         p.resetDebugVisualizerCamera(cameraDistance=5.0, cameraYaw=30.0, cameraPitch=-30.0,
-                                     cameraTargetPosition=[6, 0, 0])
+                                     cameraTargetPosition=[1, 0, 0])
 
     def __del__(self):
         """Clean up connection if not already done."""

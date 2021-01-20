@@ -49,7 +49,7 @@ if __name__ == "__main__":
         best_score = None
         # agent noise reset
         while not agent.done and agent.score > -400:
-            agent.environment.client.stepSimulation()
+            # agent.environment.client.stepSimulation()
             # agent.test()
             best_action = agent.best_action()
             # print(best_action)
@@ -57,7 +57,7 @@ if __name__ == "__main__":
             agent.update_policy()
             if best_score is None or best_score < agent.score:
                 best_score = agent.score
-            # print("score", agent.score)
+            print("score", agent.score)
             time.sleep(1. / 240.)
 
         score_history.append(agent.score)
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         average_best_score_history.append(np.mean(best_score_history))
 
         if max_best_score < best_score:
-            agent.policy.save_best()
+            # agent.policy.save_best()
             max_best_score = best_score
 
         if j % 20 == 19:
@@ -75,4 +75,4 @@ if __name__ == "__main__":
             plt.plot(average_best_score_history)
             plt.show()
             # save models
-            agent.policy.save_checkpoint()
+            # agent.policy.save_checkpoint()

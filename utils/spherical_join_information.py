@@ -1,20 +1,34 @@
+import numpy as np
+
+
 class SphericalJoinInformation(object):
-    def __init__(self, join_id: int, position: (float, float, float, float), join_torque: float):
+    def __init__(self, join_id: int, position: (float, float, float, float), join_torque: float,
+                 limit: (float, float, float, float, float, float)):
         self.join_id: int = join_id
         self.position: (float, float, float, float) = position
         self.join_torque: float = join_torque
+        self.limit: (float, float, float, float, float, float) = limit
 
-    def add_to_position(self, position_to_add: (float, float, float)) -> None:
-        self.position = (self.position[0] + (position_to_add[0] * 0.01),
-                         self.position[1] + (position_to_add[1] * 0.01),
-                         self.position[2] + (position_to_add[2] * 0.01),
+    def change_position(self, position_to_set: (float, float, float)) -> None:
+        self.position = (self.position[0] + (position_to_set[0] * 0.001),
+                         self.position[1] + (position_to_set[1] * 0.001),
+                         self.position[2] + (position_to_set[2] * 0.001),
                          self.position[3])
+        # if self.join_id == 5:
+        #     print(self.position)
+        self.apply_position_limit()
+        # self.position = (min(max(position_to_set[0], self.limit[0]), self.limit[1]),
+        #                  min(max(position_to_set[1], self.limit[2]), self.limit[3]),
+        #                  min(max(position_to_set[2], self.limit[4]), self.limit[5]),
+        #                  self.position[3])
 
-    def apply_position_limit(self, limit: (float, float, float, float, float, float)) -> None:
-        self.position = (min(max(self.position[0], limit[0]), limit[1]),
-                         min(max(self.position[1], limit[2]), limit[3]),
-                         min(max(self.position[2], limit[4]), limit[5]),
+    def apply_position_limit(self) -> None:
+        self.position = (np.clip(self.position[0], self.limit[0], self.limit[1]),
+                         np.clip(self.position[1], self.limit[2], self.limit[3]),
+                         np.clip(self.position[2], self.limit[4], self.limit[5]),
                          self.position[3])
+        # if self.join_id == 5:
+        #     print(self.position)
 
     def set_torque(self, torque: float) -> None:
         self.join_torque = torque

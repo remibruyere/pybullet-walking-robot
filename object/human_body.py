@@ -82,31 +82,37 @@ class HumanBody(object):
 
     def initialise_motor_power(self) -> None:
         self.motor_name_revolute += ["right_knee", "right_elbow"]
-        self.motor_power_revolute += [400, 300]
+        self.motor_power_revolute += [200, 150]
         self.motor_name_revolute += ["left_knee", "left_elbow"]
-        self.motor_power_revolute += [400, 300]
+        self.motor_power_revolute += [200, 150]
         self.motors_revolute = [self.join_dict_revolute[n] for n in self.motor_name_revolute]
 
         self.motor_name_spherical += ["chest"]
-        self.motor_power_spherical += [10]
+        self.motor_power_spherical += [(100, 30)]  # (fix torque, variable torque)
         self.motor_name_spherical += ["neck"]
-        self.motor_power_spherical += [10]
-        self.motor_name_spherical += ["right_hip", "left_hip"]
-        self.motor_power_spherical += [10, 10]
-        self.motor_name_spherical += ["right_ankle", "left_ankle"]
-        self.motor_power_spherical += [10, 10]
-        self.motor_name_spherical += ["right_shoulder", "left_shoulder"]
-        self.motor_power_spherical += [10, 10]
+        self.motor_power_spherical += [(60, 10)]
+        self.motor_name_spherical += ["right_hip"]
+        self.motor_power_spherical += [(40, 40)]
+        self.motor_name_spherical += ["right_ankle"]
+        self.motor_power_spherical += [(60, 50)]
+        self.motor_name_spherical += ["right_shoulder"]
+        self.motor_power_spherical += [(30, 10)]
+        self.motor_name_spherical += ["left_hip"]
+        self.motor_power_spherical += [(40, 40)]
+        self.motor_name_spherical += ["left_ankle"]
+        self.motor_power_spherical += [(60, 50)]
+        self.motor_name_spherical += ["left_shoulder"]
+        self.motor_power_spherical += [(30, 10)]
         self.motors_spherical = [self.join_dict_spherical[n] for n in self.motor_name_spherical]
 
     def initialise_spherical_motor_axis_limit(self) -> None:
         self.motor_limit_spherical = {
             1: [-0.15, 0.15, -0.4, 0.4, -0.4, 0.4],
             2: [-0.45, 0.45, -0.2, 0.2, -0.3, 0.3],
-            3: [-0.45, 0.05, -0.1, 0.1, -0.2, 0.95],
-            9: [-0.05, 0.45, -0.1, 0.1, -0.2, 0.95],
-            5: [-0.05, 0.05, -0.2, 0.2, -0.45, 0.1],
-            11: [-0.05, 0.05, -0.2, 0.2, -0.45, 0.1],
+            3: [-0.45, 0.05, -0.05, 0.05, -0.2, 0.95],
+            9: [-0.05, 0.45, -0.05, 0.05, -0.2, 0.95],
+            5: [-0.05, 0.05, -0.05, 0.05, -0.10, 0.05],
+            11: [-0.05, 0.05, -0.05, 0.05, -0.10, 0.05],
             6: [-1, 0, -0.1, 0.1, -0.2, 0.95],
             12: [0, 1, -0.1, 0.1, -0.2, 0.95]
         }
@@ -123,9 +129,9 @@ class HumanBody(object):
         :return:
         """
         join_state = self.client.getJointStateMultiDof(self.body, join_id)
-        join_information = SphericalJoinInformation(join_id=join_id, position=join_state[0], join_torque=join_state[3])
-        join_information.add_to_position(position_to_add=position_to_add)
-        join_information.apply_position_limit(limit=self.motor_limit_spherical.get(join_id))
+        join_information = SphericalJoinInformation(join_id=join_id, position=join_state[0], join_torque=join_state[3],
+                                                    limit=self.motor_limit_spherical.get(join_id))
+        join_information.change_position(position_to_set=position_to_add)
         join_information.set_torque(torque)
         return join_information
 
@@ -134,7 +140,7 @@ class HumanBody(object):
             [RevoluteJoinInformation], [SphericalJoinInformation]):
         return (
             [RevoluteJoinInformation(info[0], info[1]) for info in information[0]],
-            [SphericalJoinInformation(info[0], info[1], info[2]) for info in information[1]]
+            [SphericalJoinInformation(info[0], info[1], info[2], limit=None) for info in information[1]]
         )
 
     def apply_motor_power(self, information: tuple) -> None:
@@ -157,16 +163,18 @@ class HumanBody(object):
             return join_info.join_id
 
         joins_information.sort(key=get_join_id)
-        moves = [self.get_new_state_spherical_join(join_id=information.join_id,
-                                                   position_to_add=information.position,
-                                                   torque=information.join_torque)
-                 for information in joins_information]
-        join_indices = [move.join_id for move in moves]
-        target_positions = [move.position for move in moves]
+        new_spherical_state = [self.get_new_state_spherical_join(join_id=information.join_id,
+                                                                 position_to_add=information.position,
+                                                                 torque=information.join_torque)
+                               for information in joins_information]
+        join_indices = [spherical_state.join_id for spherical_state in new_spherical_state]
+        target_positions = [spherical_state.position for spherical_state in new_spherical_state]
         target_velocities = [[0, 0, 0]] * len(target_positions)
-        kps = [5] * len(target_positions)
-        kds = [1] * len(target_positions)
-        forces = [[50 * move.join_torque + 50] * 3 for move in moves]
+        kps = [1000] * len(target_positions)
+        kds = [1000] * len(target_positions)
+        forces = [[spherical_state.join_torque * base_torque[1] + base_torque[0]] * 3 for spherical_state, base_torque
+                  in
+                  zip(new_spherical_state, self.motor_power_spherical)]
         # print(self.body, join_indices,
         #       target_positions,
         #       target_velocities,
