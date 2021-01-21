@@ -56,6 +56,9 @@ class Policy:
         best_actor_action = np.clip(best_actor_action + self.actor_noise(), -1, 1)
         return tuple(best_actor_action)
 
+    def reduce_noise(self, gamma):
+        self.actor_noise.update_dt(gamma)
+
     def _construct_training_set(self, replay):
         # Select states and new states from replay
         states = np.array([a + b for (a, b) in zip(replay[0], replay[1])])
@@ -75,21 +78,24 @@ class Policy:
             if done_r:
                 target = reward_r
             else:
-                target = reward_r + self.discount_factor * q_new[i][0]
+                target = reward_r + self.discount_factor * q[i][0]
             x[i] = state_r
             y[i] = target
 
         return x, y, states
 
-    def update(self, batch_size=64):
-        if len(self.memory) < batch_size:
-            return None
+    def update(self, batch_size=64, number_update=5):
+        losses = []
+        for i in range(number_update):
+            if len(self.memory) < batch_size:
+                break
 
-        replay_buffer = self.memory.sample(batch_size=batch_size)
+            replay_buffer = self.memory.sample(batch_size=batch_size)
 
-        x, y, states_critic = self._construct_training_set(replay=replay_buffer)
+            x, y, states_critic = self._construct_training_set(replay=replay_buffer)
 
-        loss = self.actor.train_on_batch(x, y)
-        self.critic.train_on_batch(states_critic, y)
+            loss = self.actor.train_on_batch(x, y)
+            self.critic.train_on_batch(states_critic, y)
+            losses.append(loss)
 
-        return loss
+        return losses

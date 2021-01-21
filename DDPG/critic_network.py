@@ -19,11 +19,11 @@ class CriticNetwork(object):
         model = tf.keras.Sequential([
             tf.keras.layers.Dense(self.input_size, input_dim=self.input_size, activation=tf.keras.activations.relu,
                                   kernel_initializer=init_w, bias_initializer=init_b),
-            tf.keras.layers.Dense(300, activation=tf.keras.activations.relu,
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
-            tf.keras.layers.Dense(300, activation=tf.keras.activations.relu,
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
-            tf.keras.layers.Dense(300, activation=tf.keras.activations.relu,
+            tf.keras.layers.Dense(300, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w, bias_initializer=init_b),
             tf.keras.layers.Dense(self.value_size, activation=tf.keras.activations.linear,
                                   kernel_initializer=tf.keras.initializers.he_uniform)

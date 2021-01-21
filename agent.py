@@ -1,6 +1,8 @@
 from environment import Environment
 from policy import Policy
 
+NOISE_REDUCE = 0.99
+
 
 class Agent(object):
     def __init__(self, environment: Environment):
@@ -22,6 +24,7 @@ class Agent(object):
         self.reward = 0
         self.best_action_raw = None
         self.done = False
+        self.policy.reduce_noise(NOISE_REDUCE)
 
     @staticmethod
     def raw_action_to_usable_action(action):

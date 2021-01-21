@@ -9,14 +9,15 @@ from utils.Coordinate import Coordinate
 
 REWARD_STAYING_ALIVE = 1
 
-REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 10
-REWARD_HUMAN_STAYING_UP_POSITIVE = 3
+REWARD_HUMAN_CLOSER_GOAL_POSITIVE = 40
+REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -80
 
 REWARD_HUMAN_AHEAD_LASER_WALL = 5
 REWARD_HUMAN_BEHIND_LASER_WALL = -400
 
-REWARD_HUMAN_CLOSER_GOAL_NEGATIVE = -10
+REWARD_HUMAN_STAYING_UP_POSITIVE = 3
 REWARD_HUMAN_STAYING_UP_NEGATIVE = -40
+
 REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -50
 
 
@@ -42,7 +43,6 @@ class Environment(object):
         human_start_pos = Coordinate(0, 0, 1.411)
         human_start_orientation = self.client.getQuaternionFromEuler([math.pi / 2, 0, 0])
         human = HumanBody(self.client, human_start_pos, human_start_orientation, 0.4)
-        # human.print_joints()
 
         human.initialise_motor_controls()
         human.initialise_motor_power()
@@ -85,38 +85,43 @@ class Environment(object):
         for human_info in human_position_orientation:
             for value in human_info:
                 result.append(value)
+        for distance_goal in self.get_distance_human_goal():
+            result.append(distance_goal)
 
         return tuple(result)
 
     def get_reward(self):
         # reward to stay alive
         reward = REWARD_STAYING_ALIVE
-        # body distance from goal
-        new_distance_human_goal = self.get_distance_human_goal()
-        # print(new_distance_human_goal[0], self.memory["distance_human_goal"][0] - 0.03)
-        if new_distance_human_goal[0] < self.memory["distance_human_goal"][0] - 0.01:
-            # print("closer !!!")
-            reward += REWARD_HUMAN_CLOSER_GOAL_POSITIVE
-        else:
-            reward += REWARD_HUMAN_CLOSER_GOAL_NEGATIVE
 
-        # print(self.laser_wall, self.human.get_position_orientation()[0][0])
-        if self.laser_wall < self.human.get_position_orientation()[0][0]:
-            reward += REWARD_HUMAN_AHEAD_LASER_WALL
+        reward += self.get_distance_goal_reward()
+        reward += self.get_laser_reward()
+        reward += self.get_human_stand_up_reward()
+
+        return reward
+
+    def get_distance_goal_reward(self):
+        if self.get_distance_human_goal()[0] < self.memory["distance_human_goal"][0]:
+            # print("closer !!!")
+            return REWARD_HUMAN_CLOSER_GOAL_POSITIVE
         else:
-            reward += REWARD_HUMAN_BEHIND_LASER_WALL
-        # body height from the ground
+            return REWARD_HUMAN_CLOSER_GOAL_NEGATIVE
+
+    def get_laser_reward(self):
+        if self.laser_wall < self.human.get_position_orientation()[0][0]:
+            return REWARD_HUMAN_AHEAD_LASER_WALL
+        else:
+            return REWARD_HUMAN_BEHIND_LASER_WALL
+
+    def get_human_stand_up_reward(self):
         # (<0.94 = lower than 2/3 of the maximum standing value (1.410))
         height_human_floor = self.get_height_human_from_floor()
         if 0.94 <= height_human_floor < 1.8:
-            pass
-            # reward += REWARD_HUMAN_STAYING_UP_POSITIVE
+            return REWARD_HUMAN_STAYING_UP_POSITIVE
         elif height_human_floor >= 1.8:
-            reward += REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE
+            return REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE
         else:
-            reward += REWARD_HUMAN_STAYING_UP_NEGATIVE
-        # print(reward)
-        return reward
+            return REWARD_HUMAN_STAYING_UP_NEGATIVE
 
     def is_human_on_goal(self):
         distance_from_goal = self.memory["distance_human_goal"]
@@ -129,7 +134,7 @@ class Environment(object):
         new_state = self.get_state()
         reward = self.get_reward()
         self.update_memory()
-        self.laser_wall += 0.005
+        self.laser_wall += 0.01
         done = self.is_human_on_goal()
         return new_state, reward, done
 
@@ -137,6 +142,8 @@ class Environment(object):
     def get_shape_state():
         return (
             # position du corps dans l'espace
+            0, 0, 0,
+            # distance du robot par rapport à l'arrivée
             0, 0, 0,
             # orientation du corps dans l'espace
             0, 0, 0, 0,
