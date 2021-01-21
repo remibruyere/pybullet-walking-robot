@@ -48,7 +48,7 @@ if __name__ == "__main__":
         agent.reset()
         best_score = None
         # agent noise reset
-        while not agent.done and agent.score > -400:
+        while not agent.done and agent.score > -2000:
             # agent.environment.client.stepSimulation()
             # agent.test()
             best_action = agent.best_action()

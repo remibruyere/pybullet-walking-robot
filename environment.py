@@ -20,6 +20,8 @@ REWARD_HUMAN_STAYING_UP_NEGATIVE = -40
 
 REWARD_HUMAN_JUMP_TO_MUCH_NEGATIVE = -50
 
+REWARD_Z_DERIVATION_CONST = 20
+
 
 class Environment(object):
     def __init__(self):
@@ -66,10 +68,14 @@ class Environment(object):
         return human_root_position[2] - floor_root_position[2]
 
     def get_distance_human_goal(self):
-        (human_root_position, _) = self.human.get_position_orientation()
-        human_coord = Coordinate(human_root_position[0], human_root_position[1], human_root_position[2])
+        human_root_position = self.human.get_position_orientation()[0]
+        human_coord = Coordinate(human_root_position[0], human_root_position[2], human_root_position[1])
         distance_from_goal = human_coord.abs_distance_from(self.goal_coord)
         return distance_from_goal
+
+    def get_distance_human_laser(self):
+        human_root_position = self.human.get_position_orientation()[0]
+        return self.laser_wall - human_root_position[0]
 
     def get_state(self):
         joins_information = self.human.get_joins_information()
@@ -87,31 +93,38 @@ class Environment(object):
                 result.append(value)
         for distance_goal in self.get_distance_human_goal():
             result.append(distance_goal)
+        result.append(self.get_distance_human_laser())
 
         return tuple(result)
 
     def get_reward(self):
-        # reward to stay alive
         reward = REWARD_STAYING_ALIVE
 
         reward += self.get_distance_goal_reward()
         reward += self.get_laser_reward()
         reward += self.get_human_stand_up_reward()
+        reward += self.z_derivation_reward()
 
         return reward
 
     def get_distance_goal_reward(self):
         if self.get_distance_human_goal()[0] < self.memory["distance_human_goal"][0]:
-            # print("closer !!!")
-            return REWARD_HUMAN_CLOSER_GOAL_POSITIVE
+            return REWARD_HUMAN_CLOSER_GOAL_POSITIVE + \
+                   (REWARD_HUMAN_CLOSER_GOAL_POSITIVE * (self.goal_coord.x - self.get_distance_human_goal()[0])) * 0.1
         else:
-            return REWARD_HUMAN_CLOSER_GOAL_NEGATIVE
+            return REWARD_HUMAN_CLOSER_GOAL_NEGATIVE + \
+                   (REWARD_HUMAN_CLOSER_GOAL_NEGATIVE * self.get_distance_human_goal()[0]) * 0.1
 
     def get_laser_reward(self):
         if self.laser_wall < self.human.get_position_orientation()[0][0]:
-            return REWARD_HUMAN_AHEAD_LASER_WALL
+            return REWARD_HUMAN_AHEAD_LASER_WALL + \
+                   (REWARD_HUMAN_AHEAD_LASER_WALL * self.get_distance_human_laser()) * 0.1
         else:
-            return REWARD_HUMAN_BEHIND_LASER_WALL
+            return REWARD_HUMAN_BEHIND_LASER_WALL + \
+                   (REWARD_HUMAN_BEHIND_LASER_WALL * self.get_distance_human_laser()) * 0.1
+
+    def z_derivation_reward(self):
+        return REWARD_Z_DERIVATION_CONST * self.human.get_position_orientation()[0][1]
 
     def get_human_stand_up_reward(self):
         # (<0.94 = lower than 2/3 of the maximum standing value (1.410))
@@ -125,8 +138,7 @@ class Environment(object):
 
     def is_human_on_goal(self):
         distance_from_goal = self.memory["distance_human_goal"]
-        # print(distance_from_goal)
-        return distance_from_goal[0] < 0.5 and distance_from_goal[2] < 0.5
+        return distance_from_goal[0] < 0.5 and distance_from_goal[1] < 0.5
 
     def apply(self, action):
         self.human.apply_motor_power(information=action)
@@ -145,6 +157,8 @@ class Environment(object):
             0, 0, 0,
             # distance du robot par rapport à l'arrivée
             0, 0, 0,
+            # distance du robot par rapport au laser
+            0,
             # orientation du corps dans l'espace
             0, 0, 0, 0,
             # 4 jointures revolute avec position + force

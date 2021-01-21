@@ -82,13 +82,13 @@ class HumanBody(object):
 
     def initialise_motor_power(self) -> None:
         self.motor_name_revolute += ["right_knee", "right_elbow"]
-        self.motor_power_revolute += [230, 150]
+        self.motor_power_revolute += [250, 150]
         self.motor_name_revolute += ["left_knee", "left_elbow"]
-        self.motor_power_revolute += [230, 150]
+        self.motor_power_revolute += [250, 150]
         self.motors_revolute = [self.join_dict_revolute[n] for n in self.motor_name_revolute]
 
         self.motor_name_spherical += ["chest"]
-        self.motor_power_spherical += [(200, 30)]  # (fix torque, variable torque)
+        self.motor_power_spherical += [(200, 70)]  # (fix torque, variable torque)
         self.motor_name_spherical += ["neck"]
         self.motor_power_spherical += [(60, 10)]
         self.motor_name_spherical += ["right_hip"]
