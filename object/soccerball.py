@@ -22,4 +22,5 @@ class Soccerball(object):
                                          globalScaling=self.base_scaling)
 
     def get_position(self):
+        """Get (X, Z, Y) position"""
         return self.client.getBasePositionAndOrientation(self.body)[0]

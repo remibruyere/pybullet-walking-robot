@@ -13,6 +13,7 @@ class ReplayBuffer:
         self.buffer.append(experience)
 
     def sample(self, batch_size):
+        """Get a random batch from replay buffer"""
         state_batch = []
         action_batch = []
         reward_batch = []

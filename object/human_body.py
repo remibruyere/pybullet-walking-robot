@@ -62,6 +62,7 @@ class HumanBody(object):
         return self.client.getBasePositionAndOrientation(self.body)
 
     def initialise_motor_controls(self) -> None:
+        """Store motor information"""
         for j in range(self.client.getNumJoints(self.body)):
             info = self.client.getJointInfo(self.body, j)
             if info[2] == self.client.JOINT_REVOLUTE:
@@ -81,6 +82,7 @@ class HumanBody(object):
                                                                 self.DEFAULT_MOTOR_FORCE])
 
     def initialise_motor_power(self) -> None:
+        """Create array to store motor name and attached value of torque"""
         self.motor_name_revolute += ["right_knee", "right_elbow"]
         self.motor_power_revolute += [250, 150]
         self.motor_name_revolute += ["left_knee", "left_elbow"]
@@ -117,7 +119,20 @@ class HumanBody(object):
             12: [0, 1, -0.1, 0.1, -0.2, 0.95]
         }
 
-    # Spherical join
+    def apply_motor_power(self, information: tuple) -> None:
+        """Apply information from environment to revolute and spherical join"""
+        revolute_join_information, spherical_join_information = self.parse_information_to_join_information(information)
+        self.apply_power_revolute_join(joins_information=revolute_join_information)
+        self.apply_power_spherical_join(joins_information=spherical_join_information)
+
+    @staticmethod
+    def parse_information_to_join_information(information: tuple) -> (
+            [RevoluteJoinInformation], [SphericalJoinInformation]):
+        """Cast information from environment to usable information"""
+        return (
+            [RevoluteJoinInformation(info[0], info[1]) for info in information[0]],
+            [SphericalJoinInformation(info[0], info[1], info[2], limit=None) for info in information[1]]
+        )
 
     def get_new_state_spherical_join(self, join_id: int, position_to_add: (float, float, float),
                                      torque: float) -> SphericalJoinInformation:
@@ -135,20 +150,8 @@ class HumanBody(object):
         join_information.set_torque(torque)
         return join_information
 
-    @staticmethod
-    def parse_information_to_join_information(information: tuple) -> (
-            [RevoluteJoinInformation], [SphericalJoinInformation]):
-        return (
-            [RevoluteJoinInformation(info[0], info[1]) for info in information[0]],
-            [SphericalJoinInformation(info[0], info[1], info[2], limit=None) for info in information[1]]
-        )
-
-    def apply_motor_power(self, information: tuple) -> None:
-        revolute_join_information, spherical_join_information = self.parse_information_to_join_information(information)
-        self.apply_power_revolute_join(joins_information=revolute_join_information)
-        self.apply_power_spherical_join(joins_information=spherical_join_information)
-
     def apply_power_revolute_join(self, joins_information: List[RevoluteJoinInformation]) -> None:
+        """Apply revolute join information to pyBullet environment"""
         def get_join_id(join_info: RevoluteJoinInformation) -> int:
             return join_info.join_id
 
@@ -159,6 +162,7 @@ class HumanBody(object):
                                               forces=forces)
 
     def apply_power_spherical_join(self, joins_information: List[SphericalJoinInformation]) -> None:
+        """Apply spherical join information to pyBullet environment"""
         def get_join_id(join_info: SphericalJoinInformation) -> int:
             return join_info.join_id
 
@@ -171,17 +175,9 @@ class HumanBody(object):
         target_positions = [spherical_state.position for spherical_state in new_spherical_state]
         target_velocities = [[0, 0, 0]] * len(target_positions)
         kps = [1000] * len(target_positions)
-        kds = [1000] * len(target_positions)
+        kds = [10] * len(target_positions)
         forces = [[spherical_state.join_torque * base_torque[1] + base_torque[0]] * 3 for spherical_state, base_torque
-                  in
-                  zip(new_spherical_state, self.motor_power_spherical)]
-        # print(self.body, join_indices,
-        #       target_positions,
-        #       target_velocities,
-        #       self.client.POSITION_CONTROL,
-        #       kps,
-        #       kds,
-        #       forces)
+                  in zip(new_spherical_state, self.motor_power_spherical)]
         self.client.setJointMotorControlMultiDofArray(self.body, join_indices,
                                                       targetPositions=target_positions,
                                                       targetVelocities=target_velocities,

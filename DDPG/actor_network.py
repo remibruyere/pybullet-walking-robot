@@ -18,13 +18,11 @@ class ActorNetwork(object):
     def _build_network(self):
         init_w = tf.random_uniform_initializer(minval=-0.5, maxval=0.5)
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(24, input_shape=(self.input_size,), activation=tf.keras.activations.relu,
+            tf.keras.layers.Dense(24, input_shape=(self.input_size,), activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w),
-            tf.keras.layers.Dense(400, activation=tf.keras.activations.tanh,
+            tf.keras.layers.Dense(200, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w),
-            tf.keras.layers.Dense(400, activation=tf.keras.activations.tanh,
-                                  kernel_initializer=init_w),
-            tf.keras.layers.Dense(400, activation=tf.keras.activations.tanh,
+            tf.keras.layers.Dense(200, activation=tf.keras.activations.tanh,
                                   kernel_initializer=init_w),
             tf.keras.layers.Dense(self.action_size, activation=tf.keras.activations.tanh,
                                   kernel_initializer=tf.keras.initializers.he_uniform)

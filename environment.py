@@ -153,20 +153,20 @@ class Environment(object):
     @staticmethod
     def get_shape_state():
         return (
-            # position du corps dans l'espace
+            # body position in space
             0, 0, 0,
-            # distance du robot par rapport à l'arrivée
-            0, 0, 0,
-            # distance du robot par rapport au laser
-            0,
-            # orientation du corps dans l'espace
+            # orientation of body in space
             0, 0, 0, 0,
-            # 4 jointures revolute avec position + force
+            # distance between robot and goal
+            0, 0, 0,
+            # distance between robot and laser wall
+            0,
+            # 4 revolute join with positon and torque
             0, 0,
             0, 0,
             0, 0,
             0, 0,
-            # 8 jointures spherical avec position + force
+            # 8 spherical join with position, rotation and torque
             0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0,
@@ -178,15 +178,13 @@ class Environment(object):
         )
 
     def test(self):
-        # height = round(self.human.get_position_orientation()[0][2] - 1.410, 4)
-        # print(self.human.get_joins_information())
         self.human.apply_motor_power(information=(
             (
-                (4, 0),  # -1 et 0
-                (7, 0),  # 0 et 1
-                (10, 0),  # -1 et 0
-                (13, 0)  # 0 et 1
-            ),  # revolute
+                (4, 0),  # between -1 and 0
+                (7, 0),  # between 0 and 1
+                (10, 0),  # between -1 and 0
+                (13, 0)  # between 0 and 1
+            ),
             (
                 (1, (0, 0, 0), 0),
                 (2, (0, 0, 0), 0),

@@ -28,6 +28,7 @@ class Agent(object):
 
     @staticmethod
     def raw_action_to_usable_action(action):
+        """Parse action from actor model prediction to usable action"""
         return (
             (
                 (4, action[0]), (7, action[1]), (10, action[2]), (13, action[3])
@@ -45,30 +46,31 @@ class Agent(object):
         )
 
     def best_action(self):
+        """Get current best action to do"""
         self.best_action_raw = self.policy.best_action(state=self.state)
         return self.raw_action_to_usable_action(self.best_action_raw)
 
     def do(self, action):
+        """Apply action to the environment and get new state, reward and done or not"""
         self.previous_state = self.state
         self.state, self.reward, self.done = self.environment.apply(action=action)
         self.score += self.reward
 
-    def get_position_and_rotation(self):
-        return self.environment.client.getBasePositionAndOrientation(self.environment.human.body)
-
     def update_policy(self):
+        """Add action done to replay buffer and update policy with replay buffer"""
         self.policy.memory.push(self.state, self.best_action_raw, self.reward, self.previous_state, self.done)
         return self.policy.update()
 
     @staticmethod
     def get_shape_action():
+        """Get empty tuple that represent action shape"""
         return (
-            # 4 jointures revolute avec force
+            # 4 revolute join with torque
             0,
             0,
             0,
             0,
-            # 8 jointures spherical avec angle + force
+            # 8 spherical join with position and torque
             0, 0, 0, 0,  # 1 x y z t
             0, 0, 0, 0,  # 2 x y z t
             0, 0, 0, 0,  # 3 x y z t

@@ -14,21 +14,13 @@ class SphericalJoinInformation(object):
                          self.position[1] + (position_to_set[1] * 0.001),
                          self.position[2] + (position_to_set[2] * 0.001),
                          self.position[3])
-        # if self.join_id == 5:
-        #     print(self.position)
         self.apply_position_limit()
-        # self.position = (min(max(position_to_set[0], self.limit[0]), self.limit[1]),
-        #                  min(max(position_to_set[1], self.limit[2]), self.limit[3]),
-        #                  min(max(position_to_set[2], self.limit[4]), self.limit[5]),
-        #                  self.position[3])
 
     def apply_position_limit(self) -> None:
         self.position = (np.clip(self.position[0], self.limit[0], self.limit[1]),
                          np.clip(self.position[1], self.limit[2], self.limit[3]),
                          np.clip(self.position[2], self.limit[4], self.limit[5]),
                          self.position[3])
-        # if self.join_id == 5:
-        #     print(self.position)
 
     def set_torque(self, torque: float) -> None:
         self.join_torque = torque
